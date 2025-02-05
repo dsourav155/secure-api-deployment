@@ -10,3 +10,30 @@ resource "aws_eks_cluster" "eks_cluster" {
     Name = var.cluster_name
   }
 }
+
+output "eks_cluster_id" {
+  value = aws_eks_cluster.eks_cluster.id
+}
+
+resource "aws_eks_node_group" "eks_nodes" { 
+  cluster_name     = var.cluster_name
+  node_group_name  = "eks-nodes"
+  node_role_arn    = var.eks_role_arn
+  subnet_ids       = var.subnet_ids
+  instance_types   = ["t3.medium"]
+  scaling_config {
+    desired_size = 2
+    min_size     = 1
+    max_size     = 3
+  }
+
+  depends_on = [aws_eks_cluster.eks_cluster]
+
+  update_config {
+    max_unavailable = 1
+  }
+
+  tags = {
+    Name = "eks-node-group"
+  }
+}

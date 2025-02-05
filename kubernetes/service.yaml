@@ -3,10 +3,10 @@ kind: Service
 metadata:
   name: secure-api-service
 spec:
+  type: LoadBalancer
   selector:
     app: secure-api
   ports:
     - protocol: TCP
       port: 80
       targetPort: 5001
-  type: LoadBalancer  
