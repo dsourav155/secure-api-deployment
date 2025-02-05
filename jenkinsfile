@@ -1,0 +1,75 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "dsourav155/secure-api:latest"   
+        AWS_REGION = "us-east-1"
+        CLUSTER_NAME = "secure-api-cluster"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                // Checkout the code from GitHub
+                git branch: 'main', url: 'https://github.com/dsourav155/secure-api.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image
+                    sh 'docker build -t ${DOCKER_IMAGE} .'
+                }
+            }
+        }
+
+        stage('Login to DockerHub') {
+            steps {
+                script {
+                    // Login to DockerHub
+                    sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    // Push the Docker image to DockerHub
+                    sh 'docker push ${DOCKER_IMAGE}'
+                }
+            }
+        }
+
+        stage('Update Kubernetes Deployment') {
+            steps {
+                script {
+                    // Update the EKS cluster with the new Docker image
+                    sh '''
+                    kubectl set image deployment/secure-api-deployment secure-api=${DOCKER_IMAGE} --record
+                    kubectl rollout status deployment/secure-api-deployment
+                    '''
+                }
+            }
+        }
+
+        stage('Clean Up') {
+            steps {
+                script {
+                    // Clean up Docker resources after build and deployment
+                    sh 'docker rmi ${DOCKER_IMAGE}'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline executed successfully"
+        }
+        failure {
+            echo "Pipeline failed. Please check the logs for errors."
+        }
+    }
+}

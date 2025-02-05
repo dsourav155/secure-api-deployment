@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secure-api-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: secure-api
+  template:
+    metadata:
+      labels:
+        app: secure-api
+    spec:
+      containers:
+        - name: secure-api
+          image: dsourav155/secure-api:latest 
+          ports:
+            - containerPort: 5001
+          env:
+            - name: FLASK_ENV
+              value: "production"
