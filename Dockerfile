@@ -1,9 +1,6 @@
-# syntax=docker/dockerfile:1
-
-##############################
 # Stage 1: Build Stage
-##############################
-FROM python:3.9-slim as builder
+
+FROM --platform=linux/amd64 python:3.9-slim as builder
 
 # Set working directory
 WORKDIR /app
@@ -18,9 +15,9 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY app/ ./app/
 
-##############################
+
 # Stage 2: Final Stage
-##############################
+
 FROM python:3.9-slim
 
 WORKDIR /app
