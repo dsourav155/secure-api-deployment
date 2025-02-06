@@ -16,7 +16,9 @@ resource "aws_subnet" "public" {
   availability_zone       = element(var.azs, count.index)
 
   tags = {
-    Name = "eks-public-subnet-${count.index}"
+    Name                                        = "eks-public-subnet-${count.index}"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/elb"                    = "1"
   }
 }
 
@@ -26,6 +28,25 @@ resource "aws_internet_gateway" "igw" {
   tags = {
     Name = "eks-igw"
   }
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+
+  tags = {
+    Name = "eks-public-rt"
+  }
+}
+
+resource "aws_route_table_association" "public" {
+  count          = length(var.public_subnets)
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public.id
 }
 
 output "vpc_id" { # Output defined HERE in main.tf
