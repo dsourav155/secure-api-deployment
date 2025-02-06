@@ -14,25 +14,28 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Set up Docker Buildx') {
             steps {
                 script {
-                    sh 'docker build -t $DOCKER_IMAGE .'
+                    // Create and use a new builder instance
+                    sh 'docker buildx create --use'
                 }
             }
         }
 
-        stage('Login to DockerHub') {
+        stage('Build and Push Multi-Arch Docker Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                    sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        // Log in to DockerHub
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                        
+                        // Build and push the multi-architecture image
+                        sh '''
+                            docker buildx build --platform linux/amd64,linux/arm64 -t $DOCKER_IMAGE --push .
+                        '''
+                    }
                 }
-            }
-        }
-
-        stage('Push Image to DockerHub') {
-            steps {
-                sh 'docker push $DOCKER_IMAGE'
             }
         }
 
