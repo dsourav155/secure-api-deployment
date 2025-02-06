@@ -10,11 +10,12 @@ module "iam" {
 }
 
 module "eks" {
-  source       = "./modules/eks"
-  cluster_name = "secure-api-cluster"
-  eks_role_arn = module.iam.eks_role_arn
-  subnet_ids   = module.vpc.public_subnets
-  vpc_id       = module.vpc.vpc_id
+  source            = "./modules/eks"
+  cluster_name      = "secure-api-cluster"
+  eks_role_arn      = module.iam.eks_cluster_role_arn
+  eks_node_role_arn = module.iam.eks_node_role_arn
+  subnet_ids        = module.vpc.public_subnets
+  vpc_id            = module.vpc.vpc_id
 }
 
 output "eks_cluster_id" {
